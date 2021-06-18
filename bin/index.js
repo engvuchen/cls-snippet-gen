@@ -1,38 +1,27 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const { exec } = require('child_process');
+const path = require('path');
 
-function help() {
-  console.log(`Usage
-  cls-snippet --add`);
-}
-function main(conf = { path: '' }) {
-  let { path } = conf;
-
-  exec(`node ${path}/build/snippet.js`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.error(`stderr: ${stderr}`);
-  });
-}
-
-let packageName = `@tencent/weadmin-components-bizadmin`;
+let pkg = readPkg();
 const cmds = {
   '--add': () => {
-    // note: npx 环境需要 process.cwd(), 找不到 process.env.INIT_CWD
-    let componentPath = `${process.cwd().replace(/\\/g, '/')}/node_modules/${packageName}`;
-    fs.access(componentPath, fs.constants.F_OK, err => {
-      if (!err) {
-        main({ path: componentPath });
-      } else {
-        console.log('wecomponent 不存在。请执行 tnpm i @tencent/weadmin-components-bizadmin');
-      }
-    });
+    require('../index');
   },
+  '--version': version,
+  '-v': version,
 };
-const [, , cmd, ...args] = process.argv;
-cmds[cmd] ? cmds[cmd](...args) : help();
+const [, , cmd] = process.argv;
+cmds[cmd] ? cmds[cmd]() : help();
+
+function readPkg() {
+  return JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
+}
+function version() {
+  console.log(pkg.version);
+}
+function help() {
+  console.log(`Usage
+  cls-snippet --version, -v
+  cls-snippet --add < --prod > 添加snippet到项目`);
+}
