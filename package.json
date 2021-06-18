@@ -1,0 +1,23 @@
+{
+  "name": "cls-snippet-gen",
+  "version": "1.0.0",
+  "description": "为引用了wecomponents的项目，生成项目snippet",
+  "main": "index.js",
+  "dependencies": {
+    "rd": "^2.0.1",
+    "vue-docgen-api": "^3.15.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "cls-snippet": "bin/index.js"
+  },
+  "keywords": [
+    "snippet",
+    "cls"
+  ],
+  "author": "",
+  "license": "ISC"
+}
