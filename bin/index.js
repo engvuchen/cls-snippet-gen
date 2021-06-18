@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const path = require('path');
 const { exec } = require('child_process');
 
 function help() {
@@ -21,10 +20,11 @@ function main(conf = { path: '' }) {
   });
 }
 
+let packageName = `@tencent/weadmin-components-bizadmin`;
 const cmds = {
   '--add': () => {
     // note: npx 环境需要 process.cwd(), 找不到 process.env.INIT_CWD
-    let componentPath = `${process.cwd().replace(/\\/g, '/')}/node_modules/@tencent/weadmin-components-bizadmin`;
+    let componentPath = `${process.cwd().replace(/\\/g, '/')}/node_modules/${packageName}`;
     fs.access(componentPath, fs.constants.F_OK, err => {
       if (!err) {
         main({ path: componentPath });
