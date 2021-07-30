@@ -39,6 +39,7 @@ function main() {
   });
   console.log('成功解析组件');
 
+  // todo: 改成 NPM 包维护
   let childrenComponentNames = [
     // "button",
     // "calendar",
