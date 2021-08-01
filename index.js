@@ -1,7 +1,7 @@
 const vueDocs = require('vue-docgen-api');
-const rd = require('rd');
 const fs = require('fs');
 const path = require('path');
+const MAIN_COMPONENTS = require('cls-main-component-names');
 
 let matchNum = /^\d+$/;
 let matchLetter = /^'|"([a-zA-Z]+|[\u4e00-\u9fa5]+)'|"$/;
@@ -32,41 +32,22 @@ fs.access(packagePath, fs.constants.F_OK, err => {
   }
 });
 
-function main() {
+async function main() {
   const componentInfoList = [];
-  rd.eachFileFilterSync(`${packagePath}/${componentPath}`, /\.vue$/, function (f, s) {
-    componentInfoList.push(vueDocs.parse(f));
+
+  await new Promise((resolve, reject) => {
+    MAIN_COMPONENTS.forEach(async curName => {
+      let filePath = `${packagePath}/${componentPath}/${curName}/${curName}.vue`;
+      let accessResult = await canIAccessFile(filePath);
+      if (accessResult === 'ok') componentInfoList.push(vueDocs.parse(filePath));
+    });
+    setTimeout(() => {
+      resolve();
+    }, 0);
   });
   console.log('成功解析组件');
 
-  // todo: 改成 NPM 包维护
-  let childrenComponentNames = [
-    // "button",
-    // "calendar",
-    'origincalendar',
-    // "chart",
-    // "checkbox",
-    // "container",
-    // "input",
-    // "link",
-    // "vpagination",
-    // "processor",
-    // "querybuilder",
-    // "radio",
-    // "richtext",
-    // "select",
-    'selectlist',
-    // "tab",
-    // "table",
-    // "tag",
-    // "text",
-    // "textarea",
-    // "tree",
-    'upload-item',
-    // "upload"
-  ];
   let supportExpandProps = ['attributes', 'validity'];
-
   const componentProsDesMap = {};
   let snippetCollection = {};
   let pathConf = {
@@ -76,7 +57,7 @@ function main() {
   };
   let componentPrefixes = [];
   componentInfoList
-    .filter(curItem => !childrenComponentNames.includes(curItem.displayName.toLowerCase()))
+    .filter(curItem => MAIN_COMPONENTS.includes(curItem.displayName.toLowerCase()))
     .forEach(currentComponentInfo => {
       let { displayName, props, events, methods, slots } = currentComponentInfo;
 
@@ -323,4 +304,17 @@ function getSnippetConstructor(conf = { prefix: '', desc: '' }) {
       body: [],
     },
   };
+}
+function canIAccessFile(filePath = '') {
+  return new Promise((resolve, reject) => {
+    fs.access(filePath, fs.constants.F_OK, err => {
+      if (!err) {
+        resolve('ok');
+      } else {
+        if (env !== '--prod') {
+          console.log(`${filePath}不存在`);
+        }
+      }
+    });
+  });
 }
