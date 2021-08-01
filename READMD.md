@@ -21,6 +21,10 @@ npx cls-snippet-gen --add
 1. 生成的 snippet 在根目录 `.vscode` 文件夹下；
 2. snippet 生成成功，即可在 `vue`, `javascript` 文件中使用。
 
+**效果图**
+
+<img src="https://i.loli.net/2021/08/01/gizAXZmlfdbeFWI.png" width="60%">
+
 ## 开源协议
 
 [MIT](https://opensource.org/licenses/MIT)
