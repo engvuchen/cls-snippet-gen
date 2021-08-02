@@ -57,11 +57,11 @@ async function main() {
   };
   let componentPrefixes = [];
   componentInfoList
-    .filter(curItem => MAIN_COMPONENTS.includes(curItem.displayName.toLowerCase()))
+    .filter(curItem => MAIN_COMPONENTS.includes(curItem.displayName))
     .forEach(currentComponentInfo => {
       let { displayName, props, events, methods, slots } = currentComponentInfo;
 
-      let componentName = displayName.toLowerCase();
+      let componentName = displayName;
       let prefix = `cls-${componentName}`;
       let desc = `@cls ${prefix}`;
       let snippetConstructor = getSnippetConstructor({ prefix, desc });
