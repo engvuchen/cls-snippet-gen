@@ -37,6 +37,7 @@ async function main() {
 
   await new Promise((resolve, reject) => {
     MAIN_COMPONENTS.forEach(async curName => {
+      if (os.platform() === 'win32') curName = curName.toLowerCase();
       let filePath = `${packagePath}/${componentPath}/${curName}/${curName}.vue`;
       let accessResult = await canIAccessFile(filePath);
       if (accessResult === 'ok') componentInfoList.push(vueDocs.parse(filePath));
@@ -56,96 +57,94 @@ async function main() {
     data: snippetCollection,
   };
   let componentPrefixes = [];
-  componentInfoList
-    .filter(curItem => MAIN_COMPONENTS.includes(curItem.displayName))
-    .forEach(currentComponentInfo => {
-      let { displayName, props, events, methods, slots } = currentComponentInfo;
+  componentInfoList.forEach(currentComponentInfo => {
+    let { displayName, props, events, methods, slots } = currentComponentInfo;
 
-      let componentName = displayName;
-      let prefix = `cls-${componentName}`;
-      let desc = `@cls ${prefix}`;
-      let snippetConstructor = getSnippetConstructor({ prefix, desc });
+    let componentName = displayName;
+    let prefix = `cls-${componentName}`;
+    let desc = `@cls ${prefix}`;
+    let snippetConstructor = getSnippetConstructor({ prefix, desc });
 
-      let needExpand = [];
-      let snippetConstructorBody = {
-        component: componentName,
-        id: '$1',
-        name: '$1',
-        label: '',
-        value: undefined,
-        attributes: {},
-        validity: {},
-        decoration: [],
-      };
-      if (props) {
-        Object.keys(props).forEach(propsKey => {
-          let { description, tags, defaultValue } = props[propsKey];
+    let needExpand = [];
+    let snippetConstructorBody = {
+      component: componentName,
+      id: '$1',
+      name: '$1',
+      label: '',
+      value: undefined,
+      attributes: {},
+      validity: {},
+      decoration: [],
+    };
+    if (props) {
+      Object.keys(props).forEach(propsKey => {
+        let { description, tags, defaultValue } = props[propsKey];
 
-          // ## 检测到 tagsProperty 中包含 'ignore'，退出
-          let { property: tagsProperty, ignore: tagsIgnore } = tags;
-          if (tagsIgnore && tagsIgnore.some(curItem => curItem.title === 'ignore')) return;
+        // ## 检测到 tagsProperty 中包含 'ignore'，退出
+        let { property: tagsProperty, ignore: tagsIgnore } = tags;
+        if (tagsIgnore && tagsIgnore.some(curItem => curItem.title === 'ignore')) return;
 
-          // ## 构造属性默认值
-          let curDefaultValue = '';
-          if (defaultValue) {
-            ({ value: curDefaultValue } = defaultValue);
-          }
-          curDefaultValue = parseDefaultValue(curDefaultValue);
+        // ## 构造属性默认值
+        let curDefaultValue = '';
+        if (defaultValue) {
+          ({ value: curDefaultValue } = defaultValue);
+        }
+        curDefaultValue = parseDefaultValue(curDefaultValue);
 
-          // ## 从备注中获取 该属性是哪部分包裹属性（attributes/validity）
-          let wrapperName = getWrapperNameFromDesc(description).replace(/___/g, '');
-          // ## 包裹属性可能会被写在 tag 中
-          if (tagsProperty || wrapperName) {
-            let tagName = '';
-            // ### tags 属性中包含 name 的部分，这个 name 是包裹属性名
-            if (tagsProperty) {
-              let wrapperNameFindResult = tagsProperty.find(curItem => curItem.name);
-              if (wrapperNameFindResult) {
-                let { name: wrapperName } = wrapperNameFindResult;
-                tagName = wrapperName;
-              }
+        // ## 从备注中获取 该属性是哪部分包裹属性（attributes/validity）
+        let wrapperName = getWrapperNameFromDesc(description).replace(/___/g, '');
+        // ## 包裹属性可能会被写在 tag 中
+        if (tagsProperty || wrapperName) {
+          let tagName = '';
+          // ### tags 属性中包含 name 的部分，这个 name 是包裹属性名
+          if (tagsProperty) {
+            let wrapperNameFindResult = tagsProperty.find(curItem => curItem.name);
+            if (wrapperNameFindResult) {
+              let { name: wrapperName } = wrapperNameFindResult;
+              tagName = wrapperName;
             }
-
-            wrapperName = tagName || wrapperName;
-            if (propsKey === 'wraperClass') propsKey = 'class';
-            snippetConstructorBody[wrapperName][propsKey] = curDefaultValue;
           }
 
-          // ## 存储备注
-          if (!componentProsDesMap[componentName]) componentProsDesMap[componentName] = {};
-          // { input: {id: ''} }
-          componentProsDesMap[componentName][propsKey] = description;
+          wrapperName = tagName || wrapperName;
+          if (propsKey === 'wraperClass') propsKey = 'class';
+          snippetConstructorBody[wrapperName][propsKey] = curDefaultValue;
+        }
 
-          if (supportExpandProps.includes(wrapperName)) needExpand.push(wrapperName);
-        });
-      }
+        // ## 存储备注
+        if (!componentProsDesMap[componentName]) componentProsDesMap[componentName] = {};
+        // { input: {id: ''} }
+        componentProsDesMap[componentName][propsKey] = description;
 
-      // ## 为匹配属性添加备注 - Full 版本
-      snippetConstructor[desc].body = addDescToMatchProp({
-        body: snippetConstructorBody,
+        if (supportExpandProps.includes(wrapperName)) needExpand.push(wrapperName);
+      });
+    }
+
+    // ## 为匹配属性添加备注 - Full 版本
+    snippetConstructor[desc].body = addDescToMatchProp({
+      body: snippetConstructorBody,
+      propsToDescMap: componentProsDesMap[componentName],
+    });
+    Object.assign(snippetCollection, snippetConstructor);
+
+    // ## 构造/存储额外拓展的 snippet（目前仅支持 attributes/validity）
+    needExpand.forEach(curWrapperName => {
+      let newPrefix = `${prefix}-${curWrapperName}`;
+      let newDesc = `@cls ${newPrefix}`;
+      let newSnippetConstructor = getSnippetConstructor({
+        prefix: newPrefix,
+        desc: newDesc,
+      });
+
+      newSnippetConstructor[newDesc].body = addDescToMatchProp({
+        body: snippetConstructorBody[curWrapperName],
         propsToDescMap: componentProsDesMap[componentName],
       });
-      Object.assign(snippetCollection, snippetConstructor);
-
-      // ## 构造/存储额外拓展的 snippet（目前仅支持 attributes/validity）
-      needExpand.forEach(curWrapperName => {
-        let newPrefix = `${prefix}-${curWrapperName}`;
-        let newDesc = `@cls ${newPrefix}`;
-        let newSnippetConstructor = getSnippetConstructor({
-          prefix: newPrefix,
-          desc: newDesc,
-        });
-
-        newSnippetConstructor[newDesc].body = addDescToMatchProp({
-          body: snippetConstructorBody[curWrapperName],
-          propsToDescMap: componentProsDesMap[componentName],
-        });
-        Object.assign(snippetCollection, newSnippetConstructor);
-      });
-
-      // ### 打印列表的存储
-      componentPrefixes.push(prefix);
+      Object.assign(snippetCollection, newSnippetConstructor);
     });
+
+    // ### 打印列表的存储
+    componentPrefixes.push(prefix);
+  });
 
   writeToProjectSnippets(pathConf);
   console.log('成功写入到项目snippets');
