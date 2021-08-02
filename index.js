@@ -58,10 +58,10 @@ async function main() {
     data: snippetCollection,
   };
   let componentPrefixes = [];
-  componentInfoList.forEach(currentComponentInfo => {
+  componentInfoList.forEach((currentComponentInfo, curIndex) => {
     let { displayName, props, events, methods, slots } = currentComponentInfo;
 
-    let componentName = displayName;
+    let componentName = MAIN_COMPONENTS[curIndex];
     let prefix = `cls-${componentName}`;
     let desc = `@cls ${prefix}`;
     let snippetConstructor = getSnippetConstructor({ prefix, desc });
