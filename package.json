@@ -1,6 +1,6 @@
 {
   "name": "cls-snippet-gen",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "为引用了 wecomponents 的项目，生成项目 snippet",
   "main": "index.js",
   "scripts": {
