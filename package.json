@@ -1,14 +1,14 @@
 {
   "name": "cls-snippet-gen",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "为引用了 wecomponents 的项目，生成项目 snippet",
   "main": "index.js",
-  "dependencies": {
-    "vue-docgen-api": "^3.26.0"
-  },
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/engvuchen/cls-snippet-gen"
   },
   "bin": {
     "cls-snippet-gen": "bin/index.js"
@@ -18,5 +18,10 @@
     "cls"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "cls-main-component-names": "0.0.1",
+    "vue-docgen-api": "^3.26.0"
+  },
+  "devDependencies": {}
 }
