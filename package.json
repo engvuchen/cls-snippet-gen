@@ -20,7 +20,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "cls-main-component-names": "0.0.1",
+    "cls-main-component-names": "0.0.3",
     "vue-docgen-api": "^3.26.0"
   },
   "devDependencies": {}
