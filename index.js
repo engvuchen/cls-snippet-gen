@@ -1,6 +1,7 @@
 const vueDocs = require('vue-docgen-api');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const MAIN_COMPONENTS = require('cls-main-component-names');
 
 let matchNum = /^\d+$/;
