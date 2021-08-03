@@ -35,18 +35,16 @@ fs.access(packagePath, fs.constants.F_OK, err => {
 
 async function main() {
   const componentInfoList = [];
+  let accessFileList = [];
 
-  await new Promise((resolve, reject) => {
-    MAIN_COMPONENTS.forEach(async curName => {
-      if (os.platform() === 'win32') curName = curName.toLowerCase();
-      let filePath = `${packagePath}/${componentPath}/${curName}/${curName}.vue`;
-      let accessResult = await canIAccessFile(filePath);
-      if (accessResult === 'ok') componentInfoList.push(vueDocs.parse(filePath));
-    });
-    setTimeout(() => {
-      resolve();
-    }, 0);
+  let queen = MAIN_COMPONENTS.map(curName =>
+    canIAccessFile(`${packagePath}/${componentPath}/${curName}/${curName}.vue`, curName)
+  );
+  await Promise.allSettled(queen).then(resList => {
+    accessFileList = resList.filter(curItem => curItem.status === 'fulfilled').map(curItem => curItem.value);
+    accessFileList.forEach(filePath => componentInfoList.push(vueDocs.parse(filePath)));
   });
+
   console.log('成功解析组件');
 
   let supportExpandProps = ['attributes', 'validity'];
@@ -61,7 +59,7 @@ async function main() {
   componentInfoList.forEach((currentComponentInfo, curIndex) => {
     let { displayName, props, events, methods, slots } = currentComponentInfo;
 
-    let componentName = MAIN_COMPONENTS[curIndex];
+    let componentName = path.basename(accessFileList[curIndex], '.vue');
     let prefix = `cls-${componentName}`;
     let desc = `@cls ${prefix}`;
     let snippetConstructor = getSnippetConstructor({ prefix, desc });
@@ -77,6 +75,7 @@ async function main() {
       validity: {},
       decoration: [],
     };
+
     if (props) {
       Object.keys(props).forEach(propsKey => {
         let { description, tags, defaultValue } = props[propsKey];
@@ -309,11 +308,12 @@ function canIAccessFile(filePath = '') {
   return new Promise((resolve, reject) => {
     fs.access(filePath, fs.constants.F_OK, err => {
       if (!err) {
-        resolve('ok');
+        resolve(filePath);
       } else {
         if (env !== '--prod') {
           console.log(`${filePath}不存在`);
         }
+        reject(undefined);
       }
     });
   });
