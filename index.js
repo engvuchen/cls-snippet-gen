@@ -5,7 +5,7 @@ const os = require('os');
 const MAIN_COMPONENTS = require('cls-main-component-names');
 
 let matchNum = /^\d+$/;
-let matchLetter = /^'|"([a-zA-Z]+|[\u4e00-\u9fa5]+)'|"$/;
+let matchLetter = /^('.+'|".+")$/;
 let matchFunc = /^\(\) => \[\]$/;
 let matchEmptyStr = /^(''|\"\")$/;
 let matchEmptyArr = /^\[\]$/;
@@ -186,7 +186,7 @@ function parseDefaultValue(defaultValue) {
       defaultValue = Number.parseInt(defaultValue);
       break;
     case 'string':
-      defaultValue = defaultValue.replace(/\'([a-zA-Z]+|[\u4e00-\u9fa5]+)\'/, '$1');
+      defaultValue = defaultValue.replace(matchLetter, '$1').replace(/'|"/g, '');
       break;
     case 'array':
       defaultValue = [];
